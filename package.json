@@ -1,0 +1,15 @@
+{
+  "name": "circle-ci-helpers",
+  "version": "1.0.0",
+  "description": "Helpers for interacting with the circle ci api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "command-line-interface": "^4.0.4"
+  }
+}

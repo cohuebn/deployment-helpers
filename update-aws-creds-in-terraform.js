@@ -56,7 +56,7 @@ function createEnvironmentVariablePayload(name, value, sensitive=true) {
   }
 }
 
-async function updateEnvironmentVariable(workspaceId, existingVariables, name, value) {
+async function updateEnvironmentVariable(workspaceId, existingVariables, name, value, sensitive) {
   if (!value) {
     console.info(`No value found for variable ${name}. Skipping...`);
     return;
@@ -67,12 +67,12 @@ async function updateEnvironmentVariable(workspaceId, existingVariables, name, v
     const updatePayload = {
       type: existingVariable.type,
       id: existingVariable.id,
-      attributes: { value: value }
+      attributes: { value, sensitive }
     };
     await axios.patch(`workspaces/${workspaceId}/vars/${existingVariable.id}`, { data: updatePayload });
   }
   else {
-    const newVariablePayload = createEnvironmentVariablePayload(name, value);
+    const newVariablePayload = createEnvironmentVariablePayload(name, value, sensitive);
     await axios.post(`/workspaces/${workspaceId}/vars`, { data: newVariablePayload });
   }
 }
@@ -107,9 +107,13 @@ const addAwsCredsCli = {
     setupLogging(options.debug);
     const workspaceDetails = await getWorkspace(options.organization, options.workspace);
     const existingVariables = await getExistingVariables(workspaceDetails.id);
-    const credentialKeys = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN'];
+    const credentialKeys = [
+      { name: 'AWS_ACCESS_KEY_ID', sensitive: false },
+      { name: 'AWS_SECRET_ACCESS_KEY', sensitive: true },
+      { name: 'AWS_SESSION_TOKEN', sensitive: true }
+    ];
     const responses = Promise.all(
-      credentialKeys.map(key => updateEnvironmentVariable(workspaceDetails.id, existingVariables, key, process.env[key]))
+      credentialKeys.map(({name, sensitive}) => updateEnvironmentVariable(workspaceDetails.id, existingVariables, name, process.env[name], sensitive))
     );
     await responses;
   }
